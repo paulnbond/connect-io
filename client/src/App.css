@@ -1,0 +1,174 @@
+body{
+	background-color: #000; color:#fff;
+}
+
+.main{
+	width:80%; max-width:1000px; margin:30px auto; border:1px solid #333; min-height:400px;
+}
+
+.gameContainer{
+	width:100%;
+}
+
+.gameMenu{
+	width:100%; text-align:center;
+}
+
+.menuInputBox{
+	width:60%; margin:30px auto; display:block;
+}
+
+.menuInputBox input,
+.menuInputBox button{
+	width:45%; padding:10px;
+}
+
+.menuBtn{
+	width:30%; margin:30px auto; padding:10px; display:block;
+}
+
+.gameBoard{
+	width:55%; float:left;
+}
+
+.gb{
+	width: 420px; margin:20px auto; overflow:hidden;
+}
+
+.gr{
+	width:100%; overflow:hidden;
+}
+
+.gc{
+	width:58px; height:58px; border:1px solid #ccc; float:left; background-color:#fff;
+}
+
+.playerBoard{
+	width:calc(20% - 1px); float:left; overflow:hidden; padding-top:5px; border-left:1px solid #333;
+	height:400px;
+}
+
+.messageBoard{
+	width:calc(25% - 1px); float:left; overflow-x:hidden; overflow-y:scroll; height:100%; 
+	height:400px; border-left:1px solid #333;
+}
+
+.messageBoard::-webkit-scrollbar {
+  width: 5px; height: 2px;
+}
+
+.messageBoard::-webkit-scrollbar-button {
+  width: 0px; height: 0px;
+}
+
+.messageBoard::-webkit-scrollbar-thumb {
+  background: #e1e1e1; border: 0px none #ffffff; border-radius: 50px;
+}
+
+.messageBoard::-webkit-scrollbar-thumb:hover {
+  background: #ffffff;
+}
+
+.messageBoard::-webkit-scrollbar-thumb:active {
+  background: #000000;
+}
+
+.messageBoard::-webkit-scrollbar-track {
+  background: #666666; border: 0px solid #ffffff; border-radius: 50px;
+}
+
+.messageBoard::-webkit-scrollbar-track:hover {
+  background: #666666;
+}
+
+.messageBoard::-webkit-scrollbar-track:active {
+  background: #333333;
+}
+
+.messageBoard::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.message{
+	padding:5px 10px;
+}
+
+.player{
+	width:100%; margin-bottom:10px; padding:2px 5px; overflow:hidden;
+}
+
+.playerListColour{
+	width:20px; height:20px; border:1px solid #fff; float:left; margin-right:5px;
+}
+
+.playerListName{
+	float:left; color: #999;
+}
+
+.selected{
+	color:#fff;
+}
+
+.blue{
+	background-color:#0000ff;
+}
+
+.red{
+	background-color:#ff0000;
+}
+
+.green{
+	background-color:#00ff00;
+}
+
+.orange{
+	background-color: #ffa500;
+}
+
+.yellow{
+	background-color: #ffff00;
+}
+
+.purple{
+	background-color:#9400d3;
+}
+
+.teal{
+	background-color:#40e0d0;
+}
+
+.peach{
+	background-color:#f08080;
+}
+
+.msgblue{
+	color:#0000ff;
+}
+
+.msgred{
+	color:#ff0000;
+}
+
+.msggreen{
+	color:#00ff00;
+}
+
+.msgorange{
+	color:#ffa500;
+}
+
+.msgyellow{
+	color:#ffff00;
+}
+
+.msgpurple{
+	color:#9400d3;
+}
+
+.msgteal{
+	color:#40e0d0;
+}
+
+.msgpeach{
+	color:#f08080;
+}

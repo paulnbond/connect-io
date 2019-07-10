@@ -1,0 +1,247 @@
+<!doctype html>
+<html>
+    <head>
+        <title>connect.io</title>
+        <style>
+            body{background-color: #f9f9f9; margin:0; padding:0;}
+            .main{margin:20px auto; width:80%; max-width:800px; min-height:300px;}
+            .gameArea{overflow: hidden;}
+            .gameBtns{margin-top:20px;}
+            .game{width:calc(70% - 2px); height: 360px; float:left; margin-right:1%; border:1px solid #ccc; background-color:cornflowerblue;}
+            .messages{width:calc(29% - 2px); height: 360px; float:left; overflow-y:scroll; border:1px solid #ccc;}
+            .gameBoard{width: 420px; margin:0 auto; overflow:hidden;}
+            .gameBoardRow{width:100%; overflow:hidden; }
+            .gameBoardCell{width:58px; height:58px; border:1px solid #ccc; float:left; background-color:#fff}
+        </style>
+    </head>
+    <body>
+        <div class='main'>
+            <div class='gameArea'>
+                <div id='game' class='game'>
+                    <div id='gameBoard' class='gameBoard'></div>
+                </div>
+                <div id='messages' class='messages'></div>
+            </div>
+            <div class='gameBtns'>
+                <button id='newGame'>Create Game</button><br/>
+                <input type='text' id='joinGameInput'>
+                <button id='joinGame'>Join Game</button><br/>
+                <button id='listPlayers'>List Players</button>
+                <button id='clearMessages'>Clear Messages</button>
+            </div>
+        </div>
+
+        <script src='/socket.io/socket.io.js'></script>
+        <script>
+            var socket = io();
+
+            var GameClient = (function(){
+                function GameClient(opts){
+                    //constructor
+                    this.active = true;
+                    this.playerId = null;
+                    this.playerColour = null;
+                    this.gameId = null;
+                    this.playersTurn = null;
+                    this.messageContainer = opts.messageContainer || null;
+                    this.gameState = [
+                        [null, null, null, null, null, null, null],
+                        [null, null, null, null, null, null, null],
+                        [null, null, null, null, null, null, null],
+                        [null, null, null, null, null, null, null],
+                        [null, null, null, null, null, null, null],
+                        [null, null, null, null, null, null, null]
+                    ];
+                }
+
+                GameClient.prototype.createGame = function(cb){
+                    var that = this;
+                    this.apiRequest('/creategame/'+this.playerId, function(data){
+                        that.gameId = data.id;
+                        that.playersTurn = that.playerId;
+                        that.playerColour = data.playerColour;
+                        cb(data); 
+                    });
+                };
+
+                GameClient.prototype.createPlayer = function(cb){
+                    var that = this;
+                    this.apiRequest('/createplayer', function(data){
+                        that.playerId = data.id;
+                        cb(data);
+                    });
+                };
+
+                GameClient.prototype.apiRequest = function(url, cb){
+                    var xmlhttp = new XMLHttpRequest();
+                    xmlhttp.onload = function(){
+                        cb(xmlhttp.response);
+                    };
+                    xmlhttp.responseType = 'json';
+                    xmlhttp.open('GET', url);
+                    xmlhttp.send();
+                };
+
+                GameClient.prototype.addMessage = function(msg){
+                    var p = document.createElement('p');
+                    p.innerHTML = msg;
+                    this.messageContainer.appendChild(p);
+                    this.messageContainer.scrollTop = this.messageContainer.scrollHeight;
+                }
+                
+                GameClient.prototype.joinGame = function(cb){
+                    let that = this;
+                    var gameToJoin = document.getElementById('joinGameInput').value;
+                    this.apiRequest('/joingame/'+gameToJoin+'/'+this.playerId, function(data){
+                        that.gameId = data.game;
+                        that.gameState = data.gameState;
+                        that.playerColour = data.playerColour;
+                        that.drawGameBoard();
+                        cb(data);
+                    });
+                };
+                
+                GameClient.prototype.drawGameBoard = function(){
+                    clearGameBoard();
+                    this.gameState.forEach((row, i) => {
+                        row.forEach((cell, j) => {
+                            createGameCell.call(this, i, j);
+                        });
+                    });
+                };
+
+                function clearGameBoard(){
+                    document.getElementById('gameBoard').innerHTML = "";
+                }
+
+                function createGameRow(row){
+                    var newRow = document.createElement('div');
+                    newRow.className = 'gameBoardRow';
+                    newRow.setAttribute('id', 'gameBoardRow_'+row);
+                    newRow.setAttribute('data-row', row);
+                    document.getElementById('gameBoard').appendChild(newRow);
+                }
+
+                function createGameCell(row, col){
+                    var currentRow, that = this;
+                    currentRow = document.getElementById('gameBoardRow_'+row);
+                    if (!currentRow || currentRow === null){
+                        createGameRow.call(this, row);
+                        currentRow = document.getElementById('gameBoardRow_'+row);
+                    }
+
+                    var newCell = document.createElement('div');
+                    newCell.className = 'gameBoardCell';
+                    newCell.setAttribute('data-row', row);
+                    newCell.setAttribute('data-col', col);
+                    newCell.addEventListener('click', function(e){gameCellClick(that, e.target)});
+                    newCell.style.backgroundColor = (that.gameState[row][col] === null) ? "" : that.gameState[row][col]['colour'];
+                    currentRow.appendChild(newCell);
+                }
+
+                function gameCellClick(parent, cell){
+                    if (parent.active){
+                        if (parent.playersTurn === parent.playerId){
+                            parent.apiRequest('/cellclick/'+parent.gameId+'/'+parent.playerId+'/'+cell.getAttribute('data-row')+'/'+cell.getAttribute('data-col'), function(data){
+                                parent.gameState = data.gameState;
+                                parent.drawGameBoard();
+                            });
+                        } else {
+                            parent.addMessage('You can\'t play yet, it\'s not your turn!');
+                        }
+                    }
+                }
+
+                return GameClient;
+            })();
+
+            var gc;
+            window.onload = function(){
+                gc = new GameClient({
+                    messageContainer: document.getElementById('messages')
+                });
+                
+                if (gc.playerId === null){
+                    gc.createPlayer(function(data){
+                        gc.addMessage('Welcome player_'+data.id);
+                    });
+                }
+
+                document.getElementById('newGame').addEventListener('click', function(e){
+                    if (gc.player !== null){
+                        gc.createGame(function(data){
+                            document.getElementById('messages').innerHTML = "";
+                            gc.addMessage('New game created: '+data.id);
+                            gc.gameState = data.state;
+                            gc.drawGameBoard();
+                        });
+                    }
+                });
+
+                document.getElementById('joinGame').addEventListener('click', function(e){
+                    if(gc.playerId !== null){
+                        gc.addMessage('Attempting to join game with ID: '+document.getElementById('joinGameInput').value);
+                        gc.joinGame(function(data){
+                            gc.addMessage('Game Joined. Existing players:<br/>'+data.players.join('<br/>'));
+                        });
+                    }
+                });
+
+                document.getElementById('listPlayers').addEventListener('click', function(e){
+                    gc.apiRequest('/listplayers/'+gc.gameId, function(data){
+                        gc.addMessage('Existing players:<br/>'+data.players.join('<br/>'))
+                    });
+                });
+                
+                document.getElementById('clearMessages').addEventListener('click', function(e){
+                    document.getElementById('messages').innerHTML = "";
+                });
+
+                socket.on('newplayer', function(data) {
+                    if (data.game === gc.gameId){
+                        gc.addMessage('player_'+data.player+' has joined the game');
+                    }
+                });
+
+                socket.on('gameupdate', function(data){
+                    if (data.game === gc.gameId && data.progressGame === 'true'){
+                        if (data.winner !== null){
+                            //WINNER
+                            gc.addMessage(`<span style='color:red'>WINNER! player_${data.player} has won the game!</span>`);
+                            gc.active = false;
+                        } else {
+                            gc.playersTurn = data.playersTurn;
+                            gc.gameState = data.gameState;
+                            gc.drawGameBoard();
+                            if (data.player !== gc.playerId){
+                                gc.addMessage(`player_${data.player} played column ${data.col}`);
+                            }
+                            gc.addMessage((data.playersTurn === gc.playerId) ? 
+                                'It\'s your turn!' : 
+                                'player_'+data.playersTurn+' it\'s your turn'
+                            );
+                        }
+                    }
+                });
+            
+                socket.on('removeplayer', function(data){
+                    console.log(data);
+                    if(data.game === gc.gameId){
+                        gc.addMessage('player_'+data.player+' has left the game');
+                        if (data.playersTurn !== gc.playersTurn){
+                            gc.playersTurn = data.playersTurn;
+                            gc.addMessage((data.playersTurn === gc.playerId) ? 
+                            'It\'s your turn!' : 
+                            'player_'+data.playersTurn+' it\'s your turn'
+                        );
+                        }
+                    }
+                });
+            };
+
+            window.onbeforeunload = function(){
+                gc.apiRequest('/testunload/'+gc.gameId+'/'+gc.playerId, function(){});
+            };
+        </script>
+    </body>
+</html>

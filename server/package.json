@@ -1,0 +1,12 @@
+{
+  "name": "connect.io",
+  "version": "0.0.0",
+  "description": "Real-time multiplayer connect game",
+  "main": "server.js",
+  "author": "Paul Bond",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.17.1",
+    "socket.io": "^2.2.0"
+  }
+}
